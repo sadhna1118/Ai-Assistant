@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Assistant - Holographic Interface</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary: #00f7ff;
+            --secondary: #7b2cbf;
+            --bg-dark: #0a0a1a;
+            --bg-darker: #050510;
+            --text: #e0e0ff;
+            --accent: #ff00ff;
+            --glow: 0 0 20px rgba(0, 247, 255, 0.6);
+            --head-rotate-x: 0deg;
+            --head-rotate-y: 0deg;
+            --eye-offset-x: 0px;
+            --eye-offset-y: 0px;
+            --mouth-scale: 1;
+            --breath-offset: 0px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Orbitron', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--bg-darker) 0%, #0f0f2d 100%);
+            color: var(--text);
+            min-height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            perspective: 1000px;
+        }
+
+        /* Holographic Container */
+        .hologram-container {
+            position: relative;
+            width: 100%;
+            max-width: 1000px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        /* AI Avatar Container */
+        .avatar-container {
+            position: relative;
+            width: 300px;
+            height: 400px;
+            margin: 0 auto 2rem;
+            perspective: 1200px;
+            transform-style: preserve-3d;
+        }
+
+        .avatar {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: float 8s ease-in-out infinite;
+            transform-origin: center bottom;
+            transform: translateY(var(--breath-offset, 0px));
+        }
+
+        .face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            border-radius: 15px;
+            backface-visibility: hidden;
+            transition: all 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.1);
+            box-shadow: 0 0 40px rgba(0, 247, 255, 0.4);
+            transform-style: preserve-3d;
+            overflow: hidden;
+        }
+
+        .face::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, 
+                rgba(0, 247, 255, 0.1) 0%, 
+                rgba(123, 44, 191, 0.1) 50%,
+                rgba(0, 247, 255, 0.1) 100%);
+            z-index: 2;
+            pointer-events: none;
+            mix-blend-mode: overlay;
+        }
+
+        .face-front {
+            background-image: url('Screenshot 2025-12-18 130231.png');
+            transform: 
+                translateZ(40px) 
+                scale(0.98)
+                rotateX(var(--head-rotate-x, 0deg))
+                rotateY(var(--head-rotate-y, 0deg));
+            z-index: 3;
+            transition: transform 0.3s ease-out;
+            transform-style: preserve-3d;
+            will-change: transform;
+            
+            /* Create a subtle parallax effect for the face features */
+            background-position: 
+                calc(50% + var(--eye-offset-x, 0px)) 
+                calc(50% + var(--eye-offset-y, 0px));
+            
+            /* Mouth animation for speaking */
+            &::after {
+                content: '';
+                position: absolute;
+                bottom: 25%;
+                left: 35%;
+                right: 35%;
+                height: 8px;
+                background: rgba(0, 0, 0, 0.5);
+                border-radius: 50%;
+                transform: scaleY(calc(1 / var(--mouth-scale, 1)));
+                transform-origin: center bottom;
+                transition: transform 0.1s ease-out;
+                pointer-events: none;
+            }
+            
+            /* Eyes */
+            &::before {
+                content: '';
+                position: absolute;
+                top: 35%;
+                left: 0;
+                right: 0;
+                height: 40px;
+                background: radial-gradient(
+                    circle at 35% 50%, 
+                    rgba(0, 247, 255, 0.8) 0%,
+                    rgba(0, 247, 255, 0.6) 20%,
+                    rgba(0, 0, 0, 0) 70%
+                );
+                opacity: 0.6;
+                transform: scaleY(0.1);
+                transform-origin: center top;
+                transition: transform 0.2s ease-out;
+                pointer-events: none;
+            }
+            
+            &.blink::before {
+                transform: scaleY(0.02);
+            }
+        }
+
+        .face-side {
+            background-image: url('Screenshot 2025-12-18 130231.png');
+            transform: rotateY(90deg) translateZ(150px) scaleX(0.8) translateX(20px);
+            opacity: 0.8;
+            filter: brightness(0.85) contrast(1.2);
+            z-index: 2;
+            width: 60%;
+            right: 0;
+            left: auto;
+            transform-origin: left center;
+        }
+
+        .face-side.left {
+            transform: rotateY(-90deg) translateZ(150px) scaleX(0.8) translateX(-20px);
+            left: 0;
+            right: auto;
+            transform-origin: right center;
+        }
+
+        /* Holographic Effects */
+        .holographic-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                135deg,
+                rgba(0, 247, 255, 0.1) 0%,
+                rgba(123, 44, 191, 0.1) 100%
+            );
+            border-radius: 10px;
+            pointer-events: none;
+            mix-blend-mode: overlay;
+        }
+
+        .holographic-line {
+            position: absolute;
+            background: linear-gradient(
+                to right,
+                transparent,
+                rgba(0, 247, 255, 0.5),
+                transparent
+            );
+            height: 1px;
+            width: 100%;
+            animation: scan 4s linear infinite;
+            opacity: 0.5;
+        }
+
+        @keyframes scan {
+            0% { top: 0%; }
+            100% { top: 100%; }
+        }
+
+        /* Chat Interface */
+        .chat-container {
+            width: 100%;
+            max-width: 600px;
+            background: rgba(10, 10, 30, 0.7);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(0, 247, 255, 0.1);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .chat-messages {
+            height: 300px;
+            overflow-y: auto;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 0.8rem 1.2rem;
+            border-radius: 18px;
+            position: relative;
+            animation: messageIn 0.3s ease-out;
+            line-height: 1.4;
+        }
+
+        .user-message {
+            margin-left: auto;
+            background: rgba(123, 44, 191, 0.2);
+            border: 1px solid rgba(123, 44, 191, 0.5);
+        }
+
+        .ai-message {
+            margin-right: auto;
+            background: rgba(0, 247, 255, 0.1);
+            border: 1px solid rgba(0, 247, 255, 0.3);
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 6px;
+            padding: 1rem;
+            display: none;
+            align-items: center;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--primary);
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(1) { animation-delay: 0s; }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        .input-container {
+            display: flex;
+            padding: 1rem;
+            background: rgba(10, 10, 30, 0.5);
+            border-top: 1px solid rgba(0, 247, 255, 0.1);
+            position: relative;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 0.8rem 1.2rem;
+            border: 1px solid rgba(0, 247, 255, 0.3);
+            background: rgba(10, 10, 30, 0.7);
+            color: white;
+            border-radius: 25px;
+            outline: none;
+            font-size: 1rem;
+            font-family: 'Orbitron', sans-serif;
+            padding-right: 50px;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 10px rgba(0, 247, 255, 0.5);
+        }
+
+        button {
+            background: linear-gradient(45deg, #7b2cbf, #3a0ca3);
+            border: none;
+            color: white;
+            padding: 0 1.5rem;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 100px;
+            margin-left: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(123, 44, 191, 0.4);
+        }
+
+        .voice-btn {
+            position: absolute;
+            right: 120px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            color: var(--primary);
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.3s;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .voice-btn.listening {
+            color: #ff4d4d;
+            animation: pulse 1.5s infinite;
+        }
+
+        /* Animations */
+        @keyframes float {
+            0%, 100% { 
+                transform: translateY(0) rotateY(0) rotateX(0) scale(1);
+            }
+            25% { 
+                transform: translateY(-10px) rotateY(2deg) rotateX(1deg) scale(1.01);
+            }
+            50% { 
+                transform: translateY(-15px) rotateY(0) rotateX(0) scale(1);
+            }
+            75% { 
+                transform: translateY(-10px) rotateY(-2deg) rotateX(-1deg) scale(1.01);
+            }
+        }
+
+        @keyframes speak {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        @keyframes blink {
+            0%, 100% { transform: scaleY(1); }
+            50% { transform: scaleY(0.1); }
+        }
+
+        @keyframes messageIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes bounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-5px); }
+        }
+
+        @keyframes pulse {
+            0% { transform: translateY(-50%) scale(1); }
+            50% { transform: translateY(-50%) scale(1.1); }
+            100% { transform: translateY(-50%) scale(1); }
+        }
+
+        .speaking .face-front {
+            animation: speak 0.6s ease-in-out infinite;
+        }
+
+        .blink .face-front {
+            animation: blink 0.2s ease-in-out;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .avatar-container {
+                width: 250px;
+                height: 350px;
+            }
+
+            .chat-container {
+                border-radius: 0;
+            }
+
+            .chat-messages {
+                height: 40vh;
+            }
+
+            .message {
+                max-width: 90%;
+                font-size: 0.95rem;
+            }
+
+            .voice-btn {
+                right: 100px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="hologram-container">
+        <div class="avatar-container">
+            <div class="avatar" id="aiAvatar">
+                <div class="face face-front"></div>
+                <div class="face face-side"></div>
+                <div class="face face-side left"></div>
+                <div class="holographic-overlay"></div>
+                <div class="holographic-line"></div>
+            </div>
+        </div>
+
+        <div class="chat-container">
+            <div class="chat-messages" id="chatMessages">
+                <div class="message ai-message">
+                    Hello! I'm your AI assistant. How can I help you today?
+                </div>
+            </div>
+            
+            <div class="typing-indicator" id="typingIndicator">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <span style="margin-left: 10px; color: var(--primary);">AI is typing...</span>
+            </div>
+            
+            <div class="input-container">
+                <input type="text" id="userInput" placeholder="Type your message here..." autocomplete="off">
+                <button id="voiceButton" class="voice-btn" title="Hold to speak">
+                    <i class="fas fa-microphone"></i>
+                </button>
+                <button id="sendButton">
+                    <i class="fas fa-paper-plane"></i> Send
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const chatMessages = document.getElementById('chatMessages');
+        const userInput = document.getElementById('userInput');
+        const sendButton = document.getElementById('sendButton');
+        const voiceButton = document.getElementById('voiceButton');
+        const typingIndicator = document.getElementById('typingIndicator');
+        const aiAvatar = document.getElementById('aiAvatar');
+        const faceFront = document.querySelector('.face-front');
+        const faceSide = document.querySelector('.face-side');
+
+        // Configuration
+        const CONFIG = {
+            AI_NAME: 'Nexus',
+            TYPING_SPEED: 20,
+            THINKING_TIME: 1000,
+            SEARCHING_TIME: 1500,
+            MODE: 'auto',
+            MOTION_STRENGTH: 0.5, // Medium motion strength
+            HEAD_MOVEMENT_RANGE: 15, // Degrees of head movement
+            BREATHING_INTENSITY: 0.3, // Subtle breathing effect
+            EYE_BLINK_INTERVAL: 3000, // Average time between blinks (ms)
+            SACCADE_INTERVAL: 2000, // Eye movement interval (ms)
+            LIP_SYNC_SCALE: 1.2 // How much the mouth moves when speaking
+        };
+
+        // State
+        let isTyping = false;
+        let currentMode = 'idle';
+        let autoRotate = true;
+        let angle = 0;
+        let isDragging = false;
+        let previousMousePosition = { x: 0, y: 0 };
+        let currentRotation = { x: 0, y: 0 };
+        let recognition;
+        let blinkTimeout, saccadeTimeout, breathInterval;
+        let voiceRecognitionActive = false;
+        let isSpeaking = false;
+        let currentPhoneme = 0;
+        let phonemeIntensity = 0;
+        let targetEyePosition = { x: 0, y: 0 };
+        let currentBreathPhase = 0;
+
+        // Initialize voice recognition
+        function initVoiceRecognition() {
+            if ('webkitSpeechRecognition' in window) {
+                recognition = new webkitSpeechRecognition();
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                recognition.lang = 'en-US';
+
+                recognition.onresult = (event) => {
+                    const transcript = event.results[0][0].transcript;
+                    userInput.value = transcript;
+                    processUserInput();
+                    voiceButton.classList.remove('listening');
+                };
+
+                recognition.onerror = (event) => {
+                    console.error('Speech recognition error', event.error);
+                    voiceButton.classList.remove('listening');
+                };
+
+                recognition.onend = () => {
+                    if (voiceRecognitionActive) {
+                        recognition.start(); // Keep listening if still active
+                    } else {
+                        voiceButton.classList.remove('listening');
+                    }
+                };
+            } else {
+                voiceButton.style.display = 'none';
+            }
+        }
+
+        // Initialize voice synthesis
+        function initVoiceSynthesis() {
+            if (!window.speechSynthesis) {
+                console.warn("Speech synthesis not supported in this browser");
+                return false;
+            }
+            return true;
+        }
+
+        // Speak text with visual feedback
+        function speakText(text) {
+            if (!window.speechSynthesis) return;
+            
+            // Cancel any ongoing speech
+            window.speechSynthesis.cancel();
+            
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 0.9 + Math.random() * 0.2;
+            utterance.pitch = 0.9 + Math.random() * 0.2;
+            utterance.volume = 1.0;
+            
+            // Get voices and try to find a natural-sounding one
+            const voices = window.speechSynthesis.getVoices();
+            const preferredVoices = voices.filter(voice => 
+                voice.name.includes('Google') || 
+                voice.name.includes('Microsoft') ||
+                voice.lang.includes('en-')
+            );
+            
+            if (preferredVoices.length > 0) {
+                utterance.voice = preferredVoices[0];
+            }
+            
+            // Speaking animation
+            let speakInterval;
+            isSpeaking = true;
+            
+            utterance.onstart = () => {
+                aiAvatar.classList.add('speaking');
+                updateAIState('speaking');
+                autoRotate = false;
+                cancelBlink();
+                
+                // Start lip-sync animation
+                startLipSync();
+                
+                // Random subtle head movements while speaking
+                speakInterval = setInterval(() => {
+                    if (!isSpeaking) return;
+                    
+                    // Random subtle head movements
+                    const headMoveX = (Math.random() - 0.5) * 2 * CONFIG.MOTION_STRENGTH;
+                    const headMoveY = (Math.random() - 0.5) * CONFIG.MOTION_STRENGTH * 0.5;
+                    
+                    document.documentElement.style.setProperty('--head-rotate-x', `${headMoveY}deg`);
+                    document.documentElement.style.setProperty('--head-rotate-y', `${headMoveX}deg`);
+                    
+                }, 500); // Update head position every 500ms
+                
+                // Random blinks while speaking
+                if (Math.random() > 0.9) {
+                    blink();
+                }
+            };
+            
+            utterance.onend = () => {
+                isSpeaking = false;
+                clearInterval(speakInterval);
+                clearInterval(lipSyncInterval);
+                aiAvatar.classList.remove('speaking');
+                updateAIState('idle');
+                autoRotate = true;
+                scheduleBlink();
+                
+                // Reset mouth position
+                document.documentElement.style.setProperty('--mouth-scale', '1');
+                
+                // Reset head position
+                document.documentElement.style.setProperty('--head-rotate-x', '0deg');
+                document.documentElement.style.setProperty('--head-rotate-y', '0deg');
+            };
+            
+            utterance.onerror = (e) => {
+                console.error('Speech synthesis error:', e);
+                isSpeaking = false;
+                clearInterval(speakInterval);
+                clearInterval(lipSyncInterval);
+                aiAvatar.classList.remove('speaking');
+                updateAIState('idle');
+                autoRotate = true;
+                scheduleBlink();
+            };
+            
+            // Lip-sync animation
+            let lipSyncInterval;
+            const phonemes = ['a', 'e', 'i', 'o', 'u'];
+            
+            function startLipSync() {
+                // Start with closed mouth
+                let currentPhoneme = '';
+                let intensity = 0;
+                
+                lipSyncInterval = setInterval(() => {
+                    if (!isSpeaking) return;
+                    
+                    // Randomly change phonemes while speaking
+                    if (Math.random() > 0.7) {
+                        currentPhoneme = phonemes[Math.floor(Math.random() * phonemes.length)];
+                        intensity = 0.7 + Math.random() * 0.6; // Random intensity
+                    }
+                    
+                    // Apply mouth shape based on phoneme
+                    switch(currentPhoneme) {
+                        case 'a':
+                            document.documentElement.style.setProperty('--mouth-scale', `${1 + intensity * 0.3}`);
+                            break;
+                        case 'e':
+                            document.documentElement.style.setProperty('--mouth-scale', `${1 + intensity * 0.2}`);
+                            break;
+                        case 'i':
+                            document.documentElement.style.setProperty('--mouth-scale', `${1 + intensity * 0.1}`);
+                            break;
+                        case 'o':
+                            document.documentElement.style.setProperty('--mouth-scale', `${1 + intensity * 0.25}`);
+                            break;
+                        case 'u':
+                            document.documentElement.style.setProperty('--mouth-scale', `${1 + intensity * 0.15}`);
+                            break;
+                        default:
+                            document.documentElement.style.setProperty('--mouth-scale', '1');
+                    }
+                    
+                }, 100); // Update mouth shape every 100ms
+            }
+            
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // Update AI state
+        function updateAIState(state) {
+            currentMode = state;
+            // Add any state-specific behaviors here
+        }
+
+        // Add message to chat
+        function addMessage(text, isUser = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user-message' : 'ai-message'}`;
+            
+            if (isUser) {
+                messageDiv.textContent = text;
+                chatMessages.appendChild(messageDiv);
+            } else {
+                // Typewriter effect for AI messages
+                messageDiv.textContent = '';
+                chatMessages.appendChild(messageDiv);
+                typeWriter(text, messageDiv);
+            }
+            
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            return messageDiv;
+        }
+
+        // Typewriter effect
+        function typeWriter(text, element) {
+            let i = 0;
+            isTyping = true;
+            updateAIState('responding');
+            
+            function type() {
+                if (i < text.length) {
+                    element.textContent += text.charAt(i);
+                    i++;
+                    setTimeout(type, CONFIG.TYPING_SPEED);
+                } else {
+                    isTyping = false;
+                    updateAIState('idle');
+                }
+            }
+            
+            type();
+        }
+
+        // Show typing indicator
+        function showTypingIndicator() {
+            typingIndicator.style.display = 'flex';
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Hide typing indicator
+        function hideTypingIndicator() {
+            typingIndicator.style.display = 'none';
+        }
+
+        // Process user input
+        async function processUserInput() {
+            const message = userInput.value.trim();
+            if (!message || isTyping) return;
+            
+            // Add user message to chat
+            addMessage(message, true);
+            userInput.value = '';
+            
+            showTypingIndicator();
+            updateAIState('thinking');
+            
+            // Simulate AI thinking
+            setTimeout(async () => {
+                updateAIState('searching');
+                
+                // Simulate response time
+                setTimeout(() => {
+                    hideTypingIndicator();
+                    
+                    // Generate response
+                    const responses = [
+                        "I've analyzed your request and here's what I found...",
+                        "Based on my analysis, I can tell you that...",
+                        "That's an interesting question. Here's what I discovered...",
+                        "After processing your query, I can share that..."
+                    ];
+                    
+                    const response = responses[Math.floor(Math.random() * responses.length)];
+                    const messageElement = addMessage(response);
+                    
+                    // Speak the response
+                    if (initVoiceSynthesis()) {
+                        speakText(response);
+                    }
+                }, CONFIG.SEARCHING_TIME);
+                
+            }, CONFIG.THINKING_TIME);
+        }
+
+        // Blinking animation
+        function blink() {
+            if (currentMode === 'idle' && !isDragging) {
+                aiAvatar.classList.add('blink');
+                setTimeout(() => {
+                    aiAvatar.classList.remove('blink');
+                    scheduleBlink();
+                }, 200);
+            }
+        }
+
+        function scheduleBlink() {
+            if (blinkTimeout) clearTimeout(blinkTimeout);
+            blinkTimeout = setTimeout(blink, 2000 + Math.random() * 4000);
+        }
+
+        function cancelBlink() {
+            if (blinkTimeout) clearTimeout(blinkTimeout);
+        }
+
+        // Animation loop for avatar
+        function animate() {
+            if (autoRotate && currentMode === 'idle' && !isDragging) {
+                angle += 0.1;
+                const subtleX = Math.sin(Date.now() * 0.001) * 0.5;
+                const subtleY = Math.cos(Date.now() * 0.0007) * 0.5;
+                
+                aiAvatar.style.transform = `
+                    rotateY(${angle}deg)
+                    rotateX(${subtleY}deg)
+                    rotateZ(${subtleX * 0.3}deg)
+                `;
+            } else if (!isDragging) {
+                // Add subtle breathing and micro-movements
+                const breath = Math.sin(Date.now() * 0.002) * CONFIG.BREATHING_INTENSITY;
+                const microX = Math.sin(Date.now() * 0.001) * 0.3;
+                const microY = Math.cos(Date.now() * 0.0008) * 0.3;
+                
+                aiAvatar.style.transform = `
+                    rotateY(${currentRotation.y}deg)
+                    rotateX(${-currentRotation.x}deg)
+                    scale(${1 + breath * 0.002})
+                    rotateX(${microY}deg)
+                    rotateY(${microX}deg)
+                `;
+            }
+            
+            // Update side face visibility based on rotation
+            const sideFaces = document.querySelectorAll('.face-side');
+            sideFaces.forEach(face => {
+                const isLeft = face.classList.contains('left');
+                const rotation = currentRotation.y % 360;
+                let opacity = 0;
+                
+                if (isLeft) {
+                    opacity = Math.max(0, Math.min(1, (rotation - 90) / 30));
+                } else {
+                    opacity = Math.max(0, Math.min(1, (270 - rotation) / 30));
+                }
+                
+                face.style.opacity = opacity * 0.8;
+            });
+            
+            requestAnimationFrame(animate);
+        }
+
+        // Event Listeners
+        sendButton.addEventListener('click', processUserInput);
+        
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                processUserInput();
+            }
+        });
+
+        // Voice input handling
+        voiceButton.addEventListener('mousedown', () => {
+            if (recognition) {
+                try {
+                    voiceRecognitionActive = true;
+                    recognition.start();
+                    voiceButton.classList.add('listening');
+                } catch (e) {
+                    console.error('Speech recognition error:', e);
+                }
+            }
+        });
+
+        voiceButton.addEventListener('mouseup', () => {
+            voiceRecognitionActive = false;
+            if (recognition) {
+                recognition.stop();
+            }
+        });
+
+        voiceButton.addEventListener('mouseleave', () => {
+            if (voiceRecognitionActive) {
+                voiceRecognitionActive = false;
+                if (recognition) {
+                    recognition.stop();
+                }
+            }
+        });
+
+        // Mouse interaction for avatar
+        aiAvatar.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            autoRotate = false;
+            previousMousePosition = {
+                x: e.clientX,
+                y: e.clientY
+            };
+            document.body.style.cursor = 'grabbing';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                const deltaX = e.clientX - previousMousePosition.x;
+                const deltaY = e.clientY - previousMousePosition.y;
+                
+                // Add inertia and smoothness to rotation
+                currentRotation.y += deltaX * 0.3;
+                currentRotation.x = Math.max(-30, Math.min(30, currentRotation.x + deltaY * 0.15));
+                
+                // Add subtle perspective distortion based on rotation
+                const perspectiveDistortion = Math.abs(currentRotation.x) / 30 * 5;
+                const scale = 1 - (Math.abs(deltaX) + Math.abs(deltaY)) * 0.001;
+                
+                aiAvatar.style.transform = `
+                    rotateY(${currentRotation.y}deg)
+                    rotateX(${-currentRotation.x}deg)
+                    perspective(${1000 - perspectiveDistortion * 20}px)
+                    scale(${scale})
+                `;
+                
+                previousMousePosition = {
+                    x: e.clientX,
+                    y: e.clientY
+                };
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isDragging) {
+                isDragging = false;
+                document.body.style.cursor = '';
+                setTimeout(() => {
+                    if (!isDragging) {
+                        autoRotate = true;
+                    }
+                }, 3000);
+            }
+        });
+
+        // Initialize realistic animations
+        function initRealisticAnimations() {
+            // Start subtle breathing animation
+            breathInterval = setInterval(updateBreathing, 50);
+            
+            // Schedule eye saccades (small, quick eye movements)
+            scheduleSaccade();
+            
+            // Start with a gentle nod
+            setTimeout(() => {
+                nodHead();
+            }, 1500);
+        }
+
+        // Update breathing animation
+        function updateBreathing() {
+            currentBreathPhase += 0.02;
+            const breath = Math.sin(currentBreathPhase) * CONFIG.BREATHING_INTENSITY;
+            document.documentElement.style.setProperty('--breath-offset', `${breath}px`);
+        }
+
+        // Schedule random eye movements
+        function scheduleSaccade() {
+            if (saccadeTimeout) clearTimeout(saccadeTimeout);
+            
+            if (!isSpeaking && currentMode === 'idle' && !isDragging) {
+                // Move eyes to new random position
+                targetEyePosition = {
+                    x: (Math.random() - 0.5) * 4,
+                    y: (Math.random() - 0.5) * 2
+                };
+                updateEyes();
+            }
+            
+            // Schedule next saccade
+            saccadeTimeout = setTimeout(scheduleSaccade, 
+                CONFIG.SACCADE_INTERVAL * (0.5 + Math.random()));
+        }
+
+        // Update eye position
+        function updateEyes() {
+            document.documentElement.style.setProperty('--eye-offset-x', `${targetEyePosition.x}px`);
+            document.documentElement.style.setProperty('--eye-offset-y', `${targetEyePosition.y}px`);
+        }
+
+        // Nod head slightly
+        function nodHead() {
+            if (currentMode === 'idle' && !isDragging) {
+                const head = document.querySelector('.face-front');
+                head.style.transition = 'transform 0.8s ease-in-out';
+                head.style.transform = 'translateZ(40px) scale(0.98) translateY(2px)';
+                
+                setTimeout(() => {
+                    head.style.transition = 'transform 0.5s ease-in-out';
+                    head.style.transform = 'translateZ(40px) scale(0.98)';
+                    
+                    // Schedule next nod
+                    if (currentMode === 'idle') {
+                        setTimeout(nodHead, 5000 + Math.random() * 10000);
+                    }
+                }, 300);
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize voice features
+            if (window.speechSynthesis) {
+                window.speechSynthesis.onvoiceschanged = function() {
+                    // Voices are now available
+                };
+                window.speechSynthesis.getVoices();
+            }
+            
+            initVoiceRecognition();
+            initVoiceSynthesis();
+            initRealisticAnimations();
+            
+            // Start animations
+            animate();
+            scheduleBlink();
+            
+            // Welcome message with lip sync
+            setTimeout(() => {
+                const welcomeMsg = "Hello, I am your AI assistant. I can think, search, and communicate like a real intelligence. How can I help you today?";
+                const messageElement = addMessage(welcomeMsg);
+                if (initVoiceSynthesis()) {
+                    speakText(welcomeMsg);
+                }
+            }, 1000);
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            // Adjust any responsive elements here
+        });
+    </script>
+</body>
+</html>
