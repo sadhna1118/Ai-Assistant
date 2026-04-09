@@ -1,0 +1,11 @@
+{
+  "name": "ai-assistant",
+  "version": "1.0.0",
+  "description": "Holographic AI Assistant with Gemini Integration",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve ."
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
